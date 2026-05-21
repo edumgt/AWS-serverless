@@ -1,0 +1,14 @@
+{
+  "Records": [
+    {
+      "s3": {
+        "bucket": {
+          "name": "edumgt-java-education"
+        },
+        "object": {
+          "key": "face1.png"
+        }
+      }
+    }
+  ]
+}

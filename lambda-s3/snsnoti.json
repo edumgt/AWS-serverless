@@ -1,0 +1,8 @@
+{
+  "LambdaFunctionConfigurations": [
+    {
+      "LambdaFunctionArn": "arn:aws:lambda:ap-northeast-2:086015456585:function:s3-event-logger",
+      "Events": ["s3:ObjectCreated:*"]
+    }
+  ]
+}
