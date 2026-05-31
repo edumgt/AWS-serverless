@@ -656,49 +656,4 @@ aws logs get-log-events \
 ![Well-Architected 소개](docs/images/image-37.png)
 ![Well-Architected 참고](docs/images/image-38.png)
 
----
 
-## 후원 안내
-
-이 프로젝트는 **무료 교육 자료**로 운영됩니다.  
-AWS 서버리스 학습에 도움이 되었다면 후원을 통해 지속적인 콘텐츠 제작을 응원해 주세요! 🙏
-
-### 💖 후원이 필요한 이유
-
-- ✅ 모든 분께 무료로 콘텐츠 제공 유지
-- ✅ 신규 콘텐츠 제작: 더 많은 언어, CI/CD 파이프라인, CDK/Terraform IaC
-- ✅ 한국어/영어 동시 문서 업데이트
-- ✅ 핸즈온 워크숍 및 실습 자료 확대
-
-### 🙏 후원 방법
-
-| 플랫폼 | 링크 |
-|---|---|
-| **GitHub Sponsors** | [![Sponsor on GitHub](https://img.shields.io/badge/Sponsor-GitHub-ea4aaa?logo=github)](https://github.com/sponsors/edumgt) |
-| **Buy Me a Coffee** | [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?logo=buy-me-a-coffee&logoColor=black)](https://buymeacoffee.com/edumgt) |
-
-### 🌟 후원 혜택
-
-| 단계 | 월 금액 | 혜택 |
-|---|---|---|
-| ☕ 커피 한 잔 | $5 | 서포터 뱃지, 감사 인사 |
-| 🚀 부스터 | $20 | 신규 튜토리얼 얼리 액세스, README 이름 등록 |
-| 🏢 기업 스폰서 | $100+ | README 로고 등록, 이슈 우선 지원 |
-
----
-
-## 📚 참고 자료
-
-- [AWS Lambda 개발자 가이드](https://docs.aws.amazon.com/lambda/latest/dg/welcome.html)
-- [Amazon API Gateway 개발자 가이드](https://docs.aws.amazon.com/apigateway/latest/developerguide/welcome.html)
-- [Serverless Framework 문서](https://www.serverless.com/framework/docs/)
-- [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)
-- [Fork 추천 GitHub](https://github.com/Carlosrincong/AWS-Solutions-Architect-Associate)
-
----
-
-## 📄 라이선스
-
-[MIT](LICENSE) © edumgt
-
-> 영문 버전: [README.md](README.md)
