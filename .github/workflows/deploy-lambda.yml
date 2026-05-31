@@ -1,0 +1,151 @@
+name: Deploy to AWS Lambda
+
+on:
+  push:
+    branches: [main]
+
+env:
+  AWS_REGION: ap-northeast-2
+
+# ────────────────────────────────────────────────────────────────────────
+# 필요한 GitHub 설정 (Settings → Secrets and variables)
+#
+# Secrets (민감 정보):
+#   AWS_ACCESS_KEY_ID      — IAM 사용자 액세스 키
+#   AWS_SECRET_ACCESS_KEY  — IAM 사용자 시크릿 키
+#
+# Variables (공개 설정값):
+#   LAMBDA_NODEJS_FUNCTION_NAME     — 예: edumgt-lambda-nodejs
+#   LAMBDA_PYTHON_FUNCTION_NAME     — 예: edumgt-lambda-python
+#   LAMBDA_JAVA_FUNCTION_NAME       — 예: edumgt-lambda-java
+#   LAMBDA_S3_NODEJS_FUNCTION_NAME  — 예: edumgt-lambda-function  (선택)
+# ────────────────────────────────────────────────────────────────────────
+
+jobs:
+  # ── 변경된 디렉터리 감지 ─────────────────────────────────────────────
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      nodejs: ${{ steps.filter.outputs.nodejs }}
+      python: ${{ steps.filter.outputs.python }}
+      java: ${{ steps.filter.outputs.java }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed directories
+        id: filter
+        run: |
+          BASE=$(git rev-parse HEAD~1 2>/dev/null || git hash-object -t tree /dev/null)
+          CHANGED=$(git diff --name-only "$BASE" HEAD)
+          echo "$CHANGED"
+
+          grep -q "^nodejs/" <<< "$CHANGED" && echo "nodejs=true" >> "$GITHUB_OUTPUT" || echo "nodejs=false" >> "$GITHUB_OUTPUT"
+          grep -q "^python/" <<< "$CHANGED" && echo "python=true" >> "$GITHUB_OUTPUT" || echo "python=false" >> "$GITHUB_OUTPUT"
+          grep -q "^java/"   <<< "$CHANGED" && echo "java=true"   >> "$GITHUB_OUTPUT" || echo "java=false"   >> "$GITHUB_OUTPUT"
+
+  # ── Node.js Lambda 배포 ───────────────────────────────────────────────
+  deploy-nodejs:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.nodejs == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy Hello API Lambda
+        run: |
+          cd nodejs
+          zip function.zip index.js handler.js
+          aws lambda update-function-code \
+            --function-name ${{ vars.LAMBDA_NODEJS_FUNCTION_NAME }} \
+            --zip-file fileb://function.zip \
+            --region ${{ env.AWS_REGION }}
+          aws lambda wait function-updated \
+            --function-name ${{ vars.LAMBDA_NODEJS_FUNCTION_NAME }} \
+            --region ${{ env.AWS_REGION }}
+          echo "✅ Node.js Lambda 배포 완료: ${{ vars.LAMBDA_NODEJS_FUNCTION_NAME }}"
+
+      - name: Deploy S3 Event Lambda
+        if: vars.LAMBDA_S3_NODEJS_FUNCTION_NAME != ''
+        run: |
+          cd nodejs/lambda-s3
+          zip function.zip index.js
+          aws lambda update-function-code \
+            --function-name ${{ vars.LAMBDA_S3_NODEJS_FUNCTION_NAME }} \
+            --zip-file fileb://function.zip \
+            --region ${{ env.AWS_REGION }}
+          aws lambda wait function-updated \
+            --function-name ${{ vars.LAMBDA_S3_NODEJS_FUNCTION_NAME }} \
+            --region ${{ env.AWS_REGION }}
+          echo "✅ S3 트리거 Lambda 배포 완료: ${{ vars.LAMBDA_S3_NODEJS_FUNCTION_NAME }}"
+
+  # ── Python Lambda 배포 ────────────────────────────────────────────────
+  deploy-python:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Deploy Python Lambda
+        run: |
+          cd python
+          zip function.zip handler.py
+          aws lambda update-function-code \
+            --function-name ${{ vars.LAMBDA_PYTHON_FUNCTION_NAME }} \
+            --zip-file fileb://function.zip \
+            --region ${{ env.AWS_REGION }}
+          aws lambda wait function-updated \
+            --function-name ${{ vars.LAMBDA_PYTHON_FUNCTION_NAME }} \
+            --region ${{ env.AWS_REGION }}
+          echo "✅ Python Lambda 배포 완료: ${{ vars.LAMBDA_PYTHON_FUNCTION_NAME }}"
+
+  # ── Java Lambda 배포 ──────────────────────────────────────────────────
+  deploy-java:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.java == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Build and Deploy Java Lambda
+        run: |
+          cd java
+          mvn package -q
+          aws lambda update-function-code \
+            --function-name ${{ vars.LAMBDA_JAVA_FUNCTION_NAME }} \
+            --zip-file fileb://target/hello-lambda-1.0-SNAPSHOT.jar \
+            --region ${{ env.AWS_REGION }}
+          aws lambda wait function-updated \
+            --function-name ${{ vars.LAMBDA_JAVA_FUNCTION_NAME }} \
+            --region ${{ env.AWS_REGION }}
+          echo "✅ Java Lambda 배포 완료: ${{ vars.LAMBDA_JAVA_FUNCTION_NAME }}"
